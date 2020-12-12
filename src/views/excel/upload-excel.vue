@@ -6,6 +6,10 @@
     <el-row :gutter="20" class="form-action">
       <el-col :span="20">
         <el-form :inline="true" class="demo-form-inline">
+          <el-radio-group v-model="checkingType" style="margin-right: 32px" @change="changeType">
+            <el-radio-button label="Checking ngay sau khi upload"></el-radio-button>
+            <el-radio-button label="Checking sau khi review"></el-radio-button>
+          </el-radio-group>
           <el-form-item>
             <el-button type="primary" icon="el-icon-check" @click="checkingItems" style="color: white">
               Checking
@@ -31,21 +35,21 @@
       </el-table-column>
       <el-table-column label="OrderId" align="center" width="120">
         <template slot-scope="{row}">
-          <span>{{ row.orderId }}</span>
+          <span style="font-weight: bold">{{ row.orderId }}</span>
         </template>
 
       </el-table-column>
       <el-table-column label="DesignURL" min-width="120">
         <template slot-scope="{row}">
-          <a target="_blank" :href="row.designURL">{{ row.designURL }}</a>
+          <a target="_blank" :href="row.designURL" style="font-weight: bold ; color: #20a0ff">{{ row.designURL }}</a>
         </template>
       </el-table-column>
-      <el-table-column label="Design Review" align="center" width="120">
-        <template slot-scope="{row}">
-          <el-image :src="row.designURL" style="width: 60px ; height: 60px"
-                    :preview-src-list="[row.designURL]"></el-image>
-        </template>
-      </el-table-column>
+      <!--      <el-table-column label="Design Review" align="center" width="120">-->
+      <!--        <template slot-scope="{row}">-->
+      <!--          <el-image :src="row.designURL" style="width: 60px ; height: 60px"-->
+      <!--                    :preview-src-list="[row.designURL]"></el-image>-->
+      <!--        </template>-->
+      <!--      </el-table-column>-->
       <el-table-column label="Quantity" align="center" width="120">
         <template slot-scope="{row}">
           <span>{{ row.quantity }}</span>
@@ -64,11 +68,14 @@
         </template>
 
       </el-table-column>
-      <el-table-column label="Status" align="center" width="80" class-name="small-padding fixed-width">
+      <el-table-column label="Status" align="center" width="120" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="edit(row)" style="color: white">
-            Edit
-          </el-button>
+          <div v-if="isChecking">
+            <el-tag :type="row.isDesignError ? 'danger' : 'success'" effect="dark">
+              <span v-if=row.isDesignError style="font-weight: bold">Error</span>
+              <span v-else style="font-weight: bold">Success</span>
+            </el-tag>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -89,7 +96,8 @@ export default {
       tableData: [],
       tableHeader: [],
       orders: [],
-      errorItems: []
+      errorItems: [],
+      checkingType: "Checking ngay sau khi upload"
     }
   },
   methods: {
@@ -116,11 +124,12 @@ export default {
       this.isChecking = true
       this.errorItems = []
       this.orders.forEach(item => {
-        this.testImage(item.designURL).then(()=>{}).catch(
-            ()=>{
+        this.testImage(item.designURL).then(() => {
+        }).catch(
+            () => {
               item.isDesignError = true
               this.errorItems.push(item)
-        })
+            })
       })
     },
 
@@ -148,7 +157,8 @@ export default {
     },
 
     adsFromXlsx(results) {
-      this.isChecking = false
+      this.isChecking = (this.checkingType == "Checking ngay sau khi upload")
+
       let tempOrders = []
       results.forEach(element => {
         let item = {
@@ -161,14 +171,26 @@ export default {
           isDesignError: false
 
         }
+
         tempOrders.push(item)
 
       });
       this.orders = tempOrders;
+      if (this.checkingType == "Checking ngay sau khi upload") {
+        this.checkingItems();
+      }
+    },
 
-
-
+    changeType() {
+      if (this.checkingType == "Checking ngay sau khi upload") {
+        this.isChecking = true
+      } else {
+        this.isChecking = false
+      }
     }
+
+
+
   }
 }
 </script>
